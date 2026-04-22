@@ -76,20 +76,23 @@ class BreakBankControls extends ConsumerWidget {
             _QuickAddButton(
               label: '+5m',
               duration: const Duration(minutes: 5),
-              onPressed: () =>
-                  breakBankNotifier.addBreakTime(const Duration(minutes: 5)),
+              onPressed: () async => await breakBankNotifier.addBreakTime(
+                const Duration(minutes: 5),
+              ),
             ),
             _QuickAddButton(
               label: '+15m',
               duration: const Duration(minutes: 15),
-              onPressed: () =>
-                  breakBankNotifier.addBreakTime(const Duration(minutes: 15)),
+              onPressed: () async => await breakBankNotifier.addBreakTime(
+                const Duration(minutes: 15),
+              ),
             ),
             _QuickAddButton(
               label: '+30m',
               duration: const Duration(minutes: 30),
-              onPressed: () =>
-                  breakBankNotifier.addBreakTime(const Duration(minutes: 30)),
+              onPressed: () async => await breakBankNotifier.addBreakTime(
+                const Duration(minutes: 30),
+              ),
             ),
           ],
         ),
@@ -97,7 +100,7 @@ class BreakBankControls extends ConsumerWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: () => breakBankNotifier.reset(),
+            onPressed: () async => await breakBankNotifier.reset(),
             icon: const Icon(Icons.refresh),
             label: const Text('Reset Break Bank'),
             style: ElevatedButton.styleFrom(
@@ -115,7 +118,7 @@ class BreakBankControls extends ConsumerWidget {
 class _QuickAddButton extends StatelessWidget {
   final String label;
   final Duration duration;
-  final VoidCallback onPressed;
+  final Future<void> Function() onPressed;
 
   const _QuickAddButton({
     required this.label,

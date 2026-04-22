@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'persistence/isar_service.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Isar database before running app
+  try {
+    await IsarService.initialize();
+    print('✅ Isar database initialized successfully');
+  } catch (e) {
+    print('❌ Error initializing Isar: $e');
+  }
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
