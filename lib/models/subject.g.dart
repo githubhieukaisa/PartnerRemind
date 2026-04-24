@@ -17,38 +17,48 @@ const SubjectSchema = CollectionSchema(
   name: r'Subject',
   id: 7648000959054204885,
   properties: {
-    r'createdAt': PropertySchema(
+    r'carryOverMinutes': PropertySchema(
       id: 0,
+      name: r'carryOverMinutes',
+      type: IsarType.long,
+    ),
+    r'createdAt': PropertySchema(
+      id: 1,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'dailyTargetMinutes': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'dailyTargetMinutes',
       type: IsarType.long,
     ),
+    r'effectiveTargetMinutes': PropertySchema(
+      id: 3,
+      name: r'effectiveTargetMinutes',
+      type: IsarType.long,
+    ),
     r'isActive': PropertySchema(
-      id: 2,
+      id: 4,
       name: r'isActive',
       type: IsarType.bool,
     ),
     r'lastUpdated': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'lastUpdated',
       type: IsarType.dateTime,
     ),
     r'name': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'name',
       type: IsarType.string,
     ),
     r'notes': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'notes',
       type: IsarType.string,
     ),
     r'studyTimeToday': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'studyTimeToday',
       type: IsarType.long,
     )
@@ -89,13 +99,15 @@ void _subjectSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.createdAt);
-  writer.writeLong(offsets[1], object.dailyTargetMinutes);
-  writer.writeBool(offsets[2], object.isActive);
-  writer.writeDateTime(offsets[3], object.lastUpdated);
-  writer.writeString(offsets[4], object.name);
-  writer.writeString(offsets[5], object.notes);
-  writer.writeLong(offsets[6], object.studyTimeToday);
+  writer.writeLong(offsets[0], object.carryOverMinutes);
+  writer.writeDateTime(offsets[1], object.createdAt);
+  writer.writeLong(offsets[2], object.dailyTargetMinutes);
+  writer.writeLong(offsets[3], object.effectiveTargetMinutes);
+  writer.writeBool(offsets[4], object.isActive);
+  writer.writeDateTime(offsets[5], object.lastUpdated);
+  writer.writeString(offsets[6], object.name);
+  writer.writeString(offsets[7], object.notes);
+  writer.writeLong(offsets[8], object.studyTimeToday);
 }
 
 Subject _subjectDeserialize(
@@ -105,15 +117,16 @@ Subject _subjectDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Subject(
-    dailyTargetMinutes: reader.readLong(offsets[1]),
-    isActive: reader.readBoolOrNull(offsets[2]) ?? true,
-    name: reader.readString(offsets[4]),
-    studyTimeToday: reader.readLongOrNull(offsets[6]) ?? 0,
+    carryOverMinutes: reader.readLongOrNull(offsets[0]) ?? 0,
+    dailyTargetMinutes: reader.readLong(offsets[2]),
+    isActive: reader.readBoolOrNull(offsets[4]) ?? true,
+    name: reader.readString(offsets[6]),
+    studyTimeToday: reader.readLongOrNull(offsets[8]) ?? 0,
   );
-  object.createdAt = reader.readDateTime(offsets[0]);
+  object.createdAt = reader.readDateTime(offsets[1]);
   object.id = id;
-  object.lastUpdated = reader.readDateTime(offsets[3]);
-  object.notes = reader.readStringOrNull(offsets[5]);
+  object.lastUpdated = reader.readDateTime(offsets[5]);
+  object.notes = reader.readStringOrNull(offsets[7]);
   return object;
 }
 
@@ -125,18 +138,22 @@ P _subjectDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
-    case 2:
-      return (reader.readBoolOrNull(offset) ?? true) as P;
-    case 3:
       return (reader.readDateTime(offset)) as P;
+    case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? true) as P;
     case 5:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -232,6 +249,61 @@ extension SubjectQueryWhere on QueryBuilder<Subject, Subject, QWhereClause> {
 
 extension SubjectQueryFilter
     on QueryBuilder<Subject, Subject, QFilterCondition> {
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> carryOverMinutesEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'carryOverMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition>
+      carryOverMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'carryOverMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition>
+      carryOverMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'carryOverMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> carryOverMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'carryOverMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Subject, Subject, QAfterFilterCondition> createdAtEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -333,6 +405,62 @@ extension SubjectQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'dailyTargetMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition>
+      effectiveTargetMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'effectiveTargetMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition>
+      effectiveTargetMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'effectiveTargetMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition>
+      effectiveTargetMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'effectiveTargetMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition>
+      effectiveTargetMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'effectiveTargetMinutes',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -794,6 +922,18 @@ extension SubjectQueryLinks
     on QueryBuilder<Subject, Subject, QFilterCondition> {}
 
 extension SubjectQuerySortBy on QueryBuilder<Subject, Subject, QSortBy> {
+  QueryBuilder<Subject, Subject, QAfterSortBy> sortByCarryOverMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'carryOverMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy> sortByCarryOverMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'carryOverMinutes', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subject, Subject, QAfterSortBy> sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -815,6 +955,19 @@ extension SubjectQuerySortBy on QueryBuilder<Subject, Subject, QSortBy> {
   QueryBuilder<Subject, Subject, QAfterSortBy> sortByDailyTargetMinutesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dailyTargetMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy> sortByEffectiveTargetMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'effectiveTargetMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy>
+      sortByEffectiveTargetMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'effectiveTargetMinutes', Sort.desc);
     });
   }
 
@@ -881,6 +1034,18 @@ extension SubjectQuerySortBy on QueryBuilder<Subject, Subject, QSortBy> {
 
 extension SubjectQuerySortThenBy
     on QueryBuilder<Subject, Subject, QSortThenBy> {
+  QueryBuilder<Subject, Subject, QAfterSortBy> thenByCarryOverMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'carryOverMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy> thenByCarryOverMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'carryOverMinutes', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subject, Subject, QAfterSortBy> thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -902,6 +1067,19 @@ extension SubjectQuerySortThenBy
   QueryBuilder<Subject, Subject, QAfterSortBy> thenByDailyTargetMinutesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dailyTargetMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy> thenByEffectiveTargetMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'effectiveTargetMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy>
+      thenByEffectiveTargetMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'effectiveTargetMinutes', Sort.desc);
     });
   }
 
@@ -980,6 +1158,12 @@ extension SubjectQuerySortThenBy
 
 extension SubjectQueryWhereDistinct
     on QueryBuilder<Subject, Subject, QDistinct> {
+  QueryBuilder<Subject, Subject, QDistinct> distinctByCarryOverMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'carryOverMinutes');
+    });
+  }
+
   QueryBuilder<Subject, Subject, QDistinct> distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
@@ -989,6 +1173,12 @@ extension SubjectQueryWhereDistinct
   QueryBuilder<Subject, Subject, QDistinct> distinctByDailyTargetMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dailyTargetMinutes');
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QDistinct> distinctByEffectiveTargetMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'effectiveTargetMinutes');
     });
   }
 
@@ -1033,6 +1223,12 @@ extension SubjectQueryProperty
     });
   }
 
+  QueryBuilder<Subject, int, QQueryOperations> carryOverMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'carryOverMinutes');
+    });
+  }
+
   QueryBuilder<Subject, DateTime, QQueryOperations> createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
@@ -1042,6 +1238,13 @@ extension SubjectQueryProperty
   QueryBuilder<Subject, int, QQueryOperations> dailyTargetMinutesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dailyTargetMinutes');
+    });
+  }
+
+  QueryBuilder<Subject, int, QQueryOperations>
+      effectiveTargetMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'effectiveTargetMinutes');
     });
   }
 

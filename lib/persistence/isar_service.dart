@@ -17,6 +17,64 @@ class IsarService {
 
   IsarService._internal();
 
+  /// Get appropriate Isar directory based on platform
+  static Future<String> _getIsarDirectory() async {
+    try {
+      if (Platform.isWindows) {
+        // Windows: use APPDATA
+        final appData = Platform.environment['APPDATA'];
+        if (appData != null) {
+          final dir = Directory('$appData\\PartnerRemind\\isar');
+          if (!await dir.exists()) {
+            await dir.create(recursive: true);
+          }
+          return dir.path;
+        }
+      } else if (Platform.isMacOS) {
+        // macOS: use ~/Library/Application Support
+        final home = Platform.environment['HOME'];
+        if (home != null) {
+          final dir = Directory(
+            '$home/Library/Application Support/PartnerRemind/isar',
+          );
+          if (!await dir.exists()) {
+            await dir.create(recursive: true);
+          }
+          return dir.path;
+        }
+      } else if (Platform.isLinux) {
+        // Linux: use XDG_DATA_HOME or ~/.local/share
+        final xdgData = Platform.environment['XDG_DATA_HOME'];
+        if (xdgData != null) {
+          final dir = Directory('$xdgData/PartnerRemind/isar');
+          if (!await dir.exists()) {
+            await dir.create(recursive: true);
+          }
+          return dir.path;
+        }
+
+        final home = Platform.environment['HOME'];
+        if (home != null) {
+          final dir = Directory('$home/.local/share/PartnerRemind/isar');
+          if (!await dir.exists()) {
+            await dir.create(recursive: true);
+          }
+          return dir.path;
+        }
+      }
+    } catch (e) {
+      print('⚠️ Error getting platform directory: $e');
+    }
+
+    // Fallback to system temp directory
+    final tempDir = Directory.systemTemp;
+    final dir = Directory('${tempDir.path}/PartnerRemind/isar');
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir.path;
+  }
+
   /// Initialize Isar database
   /// Must be called once at app startup
   static Future<void> initialize() async {
@@ -25,13 +83,8 @@ class IsarService {
       return;
     }
 
-    // Use system temp directory (doesn't require path_provider)
-    // This avoids native assets build issues on Windows
-    final tempDir = Directory.systemTemp;
-    final isarDir = Directory('${tempDir.path}/partner_remind_isar');
-    if (!await isarDir.exists()) {
-      await isarDir.create(recursive: true);
-    }
+    final isarDirPath = await _getIsarDirectory();
+    print('📁 Isar database directory: $isarDirPath');
 
     _isar = await Isar.open(
       [
@@ -40,7 +93,7 @@ class IsarService {
         BreakBankSnapshotSchema,
         DailyResetSchema,
       ],
-      directory: isarDir.path,
+      directory: isarDirPath,
       inspector: true, // Enable inspector for debugging
     );
   }
@@ -75,12 +128,15 @@ class IsarService {
     await _isar.writeTxn(() => _isar.subjects.put(subject));
   }
 
-  /// Reset all subjects' daily study time (for 00:00 reset)
+  /// Reset all subjects' daily study time and calculate carry-over (for 00:00 reset)
   Future<void> resetAllSubjectsDailyTime() async {
     final subjects = await getAllSubjects();
     await _isar.writeTxn(() async {
       for (var subject in subjects) {
-        subject.resetTodayStudyTime();
+        final difference = subject.studyTimeToday - subject.effectiveTargetMinutes;
+        subject.carryOverMinutes = difference;
+        subject.studyTimeToday = 0;
+        subject.lastUpdated = DateTime.now();
         await _isar.subjects.put(subject);
       }
     });

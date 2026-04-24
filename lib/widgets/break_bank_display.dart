@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/break_bank_provider.dart';
+import '../providers/precision_timer_provider.dart';
 import 'timer_display.dart';
 
 /// Displays the accumulated break time bank
@@ -64,11 +65,38 @@ class BreakBankControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final breakBank = ref.watch(breakBankProvider);
+    final timerState = ref.watch(precisionTimerProvider);
     final breakBankNotifier = ref.read(breakBankProvider.notifier);
+    final timerNotifier = ref.read(precisionTimerProvider.notifier);
+    final hasBreakTime = breakBank.totalBreakTime > Duration.zero;
+    final timerBusy =
+        timerState.isRunning || timerState.elapsed > Duration.zero;
 
     return Column(
       spacing: 12,
       children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: (!hasBreakTime || timerBusy)
+                ? null
+                : () {
+                    timerNotifier.startBreak(breakBank.totalBreakTime);
+                  },
+            icon: const Icon(Icons.self_improvement),
+            label: Text(
+              timerBusy
+                  ? 'Finish Current Timer First'
+                  : 'Take a Break (${formatDuration(breakBank.totalBreakTime)})',
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black87,
+            ),
+          ),
+        ),
+
         // Quick add buttons for break time
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
