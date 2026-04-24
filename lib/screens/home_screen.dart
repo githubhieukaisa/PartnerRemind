@@ -119,7 +119,6 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
   @override
   void initState() {
     super.initState();
-    _setupCountdownListener();
   }
 
   @override
@@ -128,28 +127,16 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
     super.dispose();
   }
 
-  /// Setup listener for countdown finish - plays alarm and shows modal
-  void _setupCountdownListener() {
-    Future.microtask(() {
-      ref.listen<TimerState>(precisionTimerProvider, (prev, next) async {
-        // Detect countdown completion for both study and break countdown modes.
-        if (next.isFinished &&
-            (next.mode == TimerMode.countdown ||
-                next.mode == TimerMode.breakCountdown) &&
-            (prev == null || !prev.isFinished)) {
-          _showEndOfSessionModal(next.mode);
-        }
-      });
-    });
-  }
-
-  /// Show end of session modal with alarm playing
+  // Hàm hiển thị Báo thức
   Future<void> _showEndOfSessionModal(TimerMode timerMode) async {
     try {
+      // Ép Volume lên 1.0 (100%) để đảm bảo luôn nghe thấy
+      await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
       await _audioPlayer.play(AssetSource('clock_alarm.mp3'));
+      print('🔊 Đang phát âm thanh báo thức...');
     } catch (e) {
-      print('Error playing alarm: $e');
+      print('❌ Lỗi phát âm thanh: $e');
     }
 
     if (!mounted) return;
@@ -325,6 +312,16 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. ĐẶT LISTENER VÀO NGAY ĐẦU HÀM BUILD (Chuẩn Riverpod)
+    ref.listen<TimerState>(precisionTimerProvider, (prev, next) {
+      if (next.isFinished &&
+          (next.mode == TimerMode.countdown ||
+              next.mode == TimerMode.breakCountdown) &&
+          (prev == null || !prev.isFinished)) {
+        _showEndOfSessionModal(next.mode);
+      }
+    });
+
     final subjects = ref.watch(subjectProvider);
     final selectedSubjectId = ref.watch(selectedSubjectIdProvider);
     final selectedSubjectNotifier = ref.read(
