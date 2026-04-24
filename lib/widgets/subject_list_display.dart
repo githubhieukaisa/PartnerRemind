@@ -160,6 +160,47 @@ class _SubjectCard extends ConsumerWidget {
                       icon: const Icon(Icons.edit, size: 18),
                       visualDensity: VisualDensity.compact,
                     ),
+                    IconButton(
+                      tooltip: 'Delete subject',
+                      onPressed: () async {
+                        final shouldDelete = await showDialog<bool>(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text('Delete Subject'),
+                              content: Text(
+                                'Are you sure you want to delete ${subject.name}?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+                        if (shouldDelete == true) {
+                          await ref
+                              .read(subjectProvider.notifier)
+                              .deleteSubject(subject.id);
+                        }
+                      },
+                      icon: const Icon(Icons.delete, size: 18),
+                      color: Colors.red,
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ],
                 ),
               ],

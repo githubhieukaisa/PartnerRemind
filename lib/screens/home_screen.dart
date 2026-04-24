@@ -114,32 +114,40 @@ class _TimerTab extends ConsumerStatefulWidget {
 }
 
 class _TimerTabState extends ConsumerState<_TimerTab> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   @override
   void initState() {
     super.initState();
     _setupCountdownListener();
   }
 
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
   /// Setup listener for countdown finish - plays alarm and shows modal
   void _setupCountdownListener() {
     Future.microtask(() {
       ref.listen<TimerState>(precisionTimerProvider, (prev, next) async {
-        // Detect countdown completion (only once)
+        // Detect countdown completion for both study and break countdown modes.
         if (next.isFinished &&
-            next.mode == TimerMode.countdown &&
+            (next.mode == TimerMode.countdown ||
+                next.mode == TimerMode.breakCountdown) &&
             (prev == null || !prev.isFinished)) {
-          _showEndOfSessionModal();
+          _showEndOfSessionModal(next.mode);
         }
       });
     });
   }
 
   /// Show end of session modal with alarm playing
-  Future<void> _showEndOfSessionModal() async {
-    // Play alarm sound
-    final audioPlayer = AudioPlayer();
+  Future<void> _showEndOfSessionModal(TimerMode timerMode) async {
     try {
-      await audioPlayer.play(AssetSource('clock_alarm.mp3'));
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await _audioPlayer.play(AssetSource('clock_alarm.mp3'));
     } catch (e) {
       print('Error playing alarm: $e');
     }
@@ -149,134 +157,169 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
     final timerNotifier = ref.read(precisionTimerProvider.notifier);
     final currentTarget = ref.read(precisionTimerProvider).targetDuration;
     final initialMinutes = (currentTarget?.inMinutes ?? 25);
+    final minutesController = TextEditingController(
+      text: initialMinutes.toString(),
+    );
+    int customMinutes = initialMinutes;
 
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final minutesController = TextEditingController(
-              text: initialMinutes.toString(),
-            );
-            int customMinutes = initialMinutes;
-
-            return AlertDialog(
-              title: const Text(
-                "Time's up! ⏰",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
+        if (timerMode == TimerMode.breakCountdown) {
+          return AlertDialog(
+            title: const Text(
+              'Break is over! 🚀',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+            content: const Text(
+              'Ready to get back to work?',
+              style: TextStyle(fontSize: 14),
+            ),
+            actions: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  _audioPlayer.stop();
+                  Navigator.of(context).pop();
+                  timerNotifier.start();
+                },
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Start Studying'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
                 ),
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 16,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ElevatedButton.icon(
+                onPressed: () async {
+                  _audioPlayer.stop();
+                  Navigator.of(context).pop();
+                  await timerNotifier.stop();
+                },
+                icon: const Icon(Icons.stop),
+                label: const Text('Stop & Close'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          );
+        }
+
+        return AlertDialog(
+          title: const Text(
+            "Time's up! ⏰",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 16,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Do you want to continue studying?',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const Divider(),
+                const Text(
+                  'Continue Countdown:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+                Row(
+                  spacing: 8,
                   children: [
-                    const Text(
-                      'Do you want to continue studying?',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                    const Divider(),
-                    // Continue Countdown option
-                    const Text(
-                      'Continue Countdown:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    Row(
-                      spacing: 8,
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: TextField(
-                            controller: minutesController,
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              final parsed = int.tryParse(value);
-                              if (parsed != null && parsed > 0) {
-                                setState(() => customMinutes = parsed);
-                              }
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'Minutes',
-                              isDense: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: minutesController,
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          final parsed = int.tryParse(value);
+                          if (parsed != null && parsed > 0) {
+                            customMinutes = parsed;
+                          }
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Minutes',
+                          isDense: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
                           ),
                         ),
-                        Expanded(
-                          flex: 3,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              audioPlayer.stop();
-                              Navigator.of(context).pop();
-                              timerNotifier.startCountdown(
-                                Duration(minutes: customMinutes),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                            ),
-                            child: const Text('Countdown'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Switch to stopwatch
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        audioPlayer.stop();
-                        Navigator.of(context).pop();
-                        timerNotifier.start();
-                      },
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('Continue in Stopwatch Mode'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
                       ),
                     ),
-                    // Stop and save
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        audioPlayer.stop();
-                        Navigator.of(context).pop();
-                        await timerNotifier.stop();
-                      },
-                      icon: const Icon(Icons.stop),
-                      label: const Text('Stop & Save Session'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
+                    Expanded(
+                      flex: 3,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _audioPlayer.stop();
+                          Navigator.of(context).pop();
+                          timerNotifier.startCountdown(
+                            Duration(minutes: customMinutes),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                        ),
+                        child: const Text('Countdown'),
                       ),
                     ),
                   ],
                 ),
-              ),
-              actions: [
-                TextButton(
+                ElevatedButton.icon(
                   onPressed: () {
-                    audioPlayer.stop();
+                    _audioPlayer.stop();
                     Navigator.of(context).pop();
+                    timerNotifier.start();
                   },
-                  child: const Text('Dismiss'),
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Continue in Stopwatch Mode'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    _audioPlayer.stop();
+                    Navigator.of(context).pop();
+                    await timerNotifier.stop();
+                  },
+                  icon: const Icon(Icons.stop),
+                  label: const Text('Stop & Save Session'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ],
-            );
-          },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _audioPlayer.stop();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Dismiss'),
+            ),
+          ],
         );
       },
     ).then((_) {
       // Ensure audio stops when dialog is dismissed by clicking outside
-      audioPlayer.stop();
+      _audioPlayer.stop();
+      minutesController.dispose();
     });
   }
 

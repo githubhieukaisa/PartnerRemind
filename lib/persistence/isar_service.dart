@@ -128,12 +128,18 @@ class IsarService {
     await _isar.writeTxn(() => _isar.subjects.put(subject));
   }
 
+  /// Delete subject by id
+  Future<void> deleteSubject(int id) async {
+    await _isar.writeTxn(() => _isar.subjects.delete(id));
+  }
+
   /// Reset all subjects' daily study time and calculate carry-over (for 00:00 reset)
   Future<void> resetAllSubjectsDailyTime() async {
     final subjects = await getAllSubjects();
     await _isar.writeTxn(() async {
       for (var subject in subjects) {
-        final difference = subject.studyTimeToday - subject.effectiveTargetMinutes;
+        final difference =
+            subject.studyTimeToday - subject.effectiveTargetMinutes;
         subject.carryOverMinutes = difference;
         subject.studyTimeToday = 0;
         subject.lastUpdated = DateTime.now();

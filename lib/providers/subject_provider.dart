@@ -65,6 +65,16 @@ class SubjectNotifier extends Notifier<List<Subject>> {
     }
   }
 
+  /// Delete a subject by id
+  Future<void> deleteSubject(int id) async {
+    try {
+      await _isarService.deleteSubject(id);
+      await _loadFromDatabase();
+    } catch (e) {
+      print(e);
+    }
+  }
+
   /// Get subject by ID
   Subject? getSubjectById(int id) {
     try {

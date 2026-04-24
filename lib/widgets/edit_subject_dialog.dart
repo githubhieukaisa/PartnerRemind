@@ -27,7 +27,7 @@ class _EditSubjectDialogState extends ConsumerState<EditSubjectDialog> {
     );
     if (widget.subject.carryOverMinutes < 0) {
       _debtMinutesController = TextEditingController(
-        text: widget.subject.carryOverMinutes.toString(),
+        text: widget.subject.carryOverMinutes.abs().toString(),
       );
     }
   }
@@ -70,18 +70,19 @@ class _EditSubjectDialogState extends ConsumerState<EditSubjectDialog> {
         return;
       }
 
-      if (parsedDebt > 0 || parsedDebt < widget.subject.carryOverMinutes) {
+      if (parsedDebt < 0 ||
+          parsedDebt > widget.subject.carryOverMinutes.abs()) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Debt must be between ${widget.subject.carryOverMinutes} and 0',
+              'Debt must be between 0 and ${widget.subject.carryOverMinutes.abs()}',
             ),
           ),
         );
         return;
       }
 
-      carryOverMinutes = parsedDebt;
+      carryOverMinutes = -parsedDebt;
     }
 
     try {
@@ -154,9 +155,9 @@ class _EditSubjectDialogState extends ConsumerState<EditSubjectDialog> {
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Debt Minutes',
-                  hintText: widget.subject.carryOverMinutes.toString(),
+                  hintText: widget.subject.carryOverMinutes.abs().toString(),
                   helperText:
-                      'Allowed range: ${widget.subject.carryOverMinutes} to 0',
+                      'Allowed range: 0 to ${widget.subject.carryOverMinutes.abs()}',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
