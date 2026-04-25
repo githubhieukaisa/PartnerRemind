@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/navigation_provider.dart';
 import '../providers/precision_timer_provider.dart';
 import '../providers/recent_countdowns_provider.dart';
+import '../providers/subject_provider.dart';
 
 /// Subject-aware timer controls that disable Start/Countdown if no subject selected.
 class SubjectAwareTimerControls extends ConsumerWidget {
@@ -146,6 +148,14 @@ class _CountdownDialogState extends ConsumerState<_CountdownDialog> {
   @override
   Widget build(BuildContext context) {
     final recent = ref.watch(recentCountdownsProvider);
+    final selectedId = ref.watch(selectedSubjectIdProvider);
+    final subjects = ref.watch(subjectProvider);
+    final selectedSubject = selectedId == null
+        ? null
+        : subjects.where((s) => s.id == selectedId).isEmpty
+        ? null
+        : subjects.firstWhere((s) => s.id == selectedId);
+    final remainingMinutes = selectedSubject?.getRemainingMinutes() ?? 0;
 
     return AlertDialog(
       title: const Text('Start Countdown'),
@@ -162,6 +172,27 @@ class _CountdownDialogState extends ConsumerState<_CountdownDialog> {
               spacing: 8,
               runSpacing: 8,
               children: [
+                if (selectedSubject != null && remainingMinutes > 0)
+                  Theme(
+                    data: Theme.of(context).copyWith(
+                      elevatedButtonTheme: ElevatedButtonThemeData(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: selectedMinutes == remainingMinutes
+                              ? Colors.green
+                              : Colors.green.withValues(alpha: 0.2),
+                          foregroundColor: selectedMinutes == remainingMinutes
+                              ? Colors.white
+                              : Colors.green[900],
+                        ),
+                      ),
+                    ),
+                    child: _PresetButton(
+                      label: 'Finish Target (${remainingMinutes}m)',
+                      minutes: remainingMinutes,
+                      isSelected: selectedMinutes == remainingMinutes,
+                      onTap: () => selectMinutes(remainingMinutes),
+                    ),
+                  ),
                 _PresetButton(
                   label: '15m',
                   minutes: 15,

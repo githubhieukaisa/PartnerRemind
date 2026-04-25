@@ -17,109 +17,15 @@ import '../widgets/subject_aware_timer_controls.dart';
 import '../services/daily_reset_service.dart';
 
 /// Home screen with window management, multi-tab navigation, and timer integration
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Force daily reset service initialization when home screen is built.
-    ref.read(dailyResetServiceProvider);
-
-    final windowState = ref.watch(windowStateProvider);
-    final windowNotifier = ref.read(windowStateProvider.notifier);
-    final activeTab = ref.watch(activeTabProvider);
-    final activeTabNotifier = ref.read(activeTabProvider.notifier);
-
-    // In compact mode, show minimal study bar
-    if (windowState.isCompactMode) {
-      return Scaffold(
-        body: Column(
-          children: [
-            CustomTitleBar(
-              title: 'PartnerRemind',
-              isCompactMode: true,
-              onCompactToggle: () => windowNotifier.toggleCompactMode(),
-            ),
-            const Expanded(child: CompactStudyBar()),
-          ],
-        ),
-      );
-    }
-
-    // Normal mode: multi-tab desktop layout
-    return Scaffold(
-      body: Column(
-        children: [
-          // Global CustomTitleBar at top
-          CustomTitleBar(
-            title: 'PartnerRemind - Study Assistant',
-            isCompactMode: false,
-            onCompactToggle: () => windowNotifier.toggleCompactMode(),
-            onMinimize: () => windowNotifier.minimizeWindow(),
-            onMaximize: () => windowNotifier.maximizeWindow(),
-            onClose: () => windowNotifier.closeWindow(),
-          ),
-          // Body with NavigationRail + Tab Content
-          Expanded(
-            child: Row(
-              children: [
-                // Sidebar navigation
-                NavigationRail(
-                  selectedIndex: activeTab,
-                  onDestinationSelected: (index) =>
-                      activeTabNotifier.state = index,
-                  labelType: NavigationRailLabelType.all,
-                  extended: false,
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.timer),
-                      label: Text('Timer'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.subject),
-                      label: Text('Subjects'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.settings),
-                      label: Text('Settings'),
-                    ),
-                  ],
-                ),
-                // Tab content area
-                Expanded(
-                  child: IndexedStack(
-                    index: activeTab,
-                    children: const [
-                      _TimerTab(),
-                      _SubjectsTab(),
-                      _SettingsTab(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-/// Timer Tab - Study session with subject selection
-class _TimerTab extends ConsumerStatefulWidget {
-  const _TimerTab();
-
-  @override
-  ConsumerState<_TimerTab> createState() => _TimerTabState();
-}
-
-class _TimerTabState extends ConsumerState<_TimerTab> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final AudioPlayer _audioPlayer = AudioPlayer();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -312,7 +218,10 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. ĐẶT LISTENER VÀO NGAY ĐẦU HÀM BUILD (Chuẩn Riverpod)
+    // Force daily reset service initialization when home screen is built.
+    ref.read(dailyResetServiceProvider);
+
+    // Global listener so alarm still works in Compact Mode when _TimerTab is unmounted.
     ref.listen<TimerState>(precisionTimerProvider, (prev, next) {
       if (next.isFinished &&
           (next.mode == TimerMode.countdown ||
@@ -322,12 +231,185 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
       }
     });
 
+    final windowState = ref.watch(windowStateProvider);
+    final windowNotifier = ref.read(windowStateProvider.notifier);
+    final activeTab = ref.watch(activeTabProvider);
+    final activeTabNotifier = ref.read(activeTabProvider.notifier);
+    final timerState = ref.watch(precisionTimerProvider);
+    final subjects = ref.watch(subjectProvider);
+    final totalStudyMinutes = subjects.fold<int>(
+      0,
+      (sum, subject) => sum + subject.studyTimeToday,
+    );
+
+    String formatMiniTimer(Duration d) {
+      final h = d.inHours.toString().padLeft(2, '0');
+      final m = (d.inMinutes % 60).toString().padLeft(2, '0');
+      final s = (d.inSeconds % 60).toString().padLeft(2, '0');
+      return '$h:$m:$s';
+    }
+
+    final miniDisplayTime = timerState.getDisplayTime();
+
+    // In compact mode, show minimal study bar
+    if (windowState.isCompactMode) {
+      return Scaffold(
+        body: Column(
+          children: [
+            CustomTitleBar(
+              title: 'PartnerRemind',
+              isCompactMode: true,
+              onCompactToggle: () => windowNotifier.toggleCompactMode(),
+            ),
+            const Expanded(child: CompactStudyBar()),
+          ],
+        ),
+      );
+    }
+
+    // Normal mode: multi-tab desktop layout
+    return Scaffold(
+      body: Column(
+        children: [
+          // Global CustomTitleBar at top
+          CustomTitleBar(
+            title: 'PartnerRemind - Study Assistant',
+            isCompactMode: false,
+            onCompactToggle: () => windowNotifier.toggleCompactMode(),
+            onMinimize: () => windowNotifier.minimizeWindow(),
+            onMaximize: () => windowNotifier.maximizeWindow(),
+            onClose: () => windowNotifier.closeWindow(),
+          ),
+          // Body with NavigationRail + Tab Content
+          Expanded(
+            child: Row(
+              children: [
+                // Sidebar navigation
+                NavigationRail(
+                  selectedIndex: activeTab,
+                  onDestinationSelected: (index) =>
+                      activeTabNotifier.state = index,
+                  labelType: NavigationRailLabelType.all,
+                  extended: false,
+                  trailing: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Container(
+                      width: 96,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple.withValues(alpha: 0.1),
+                        border: Border.all(
+                          color: Colors.deepPurple.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Today',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${totalStudyMinutes}m',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          const Divider(height: 16, color: Colors.black12),
+                          Text(
+                            timerState.mode == TimerMode.breakCountdown
+                                ? 'Break'
+                                : 'Timer',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            formatMiniTimer(miniDisplayTime),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                              color: timerState.isRunning
+                                  ? Colors.green
+                                  : (miniDisplayTime > Duration.zero
+                                        ? Colors.orange
+                                        : Colors.deepPurple),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.timer),
+                      label: Text('Timer'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.subject),
+                      label: Text('Subjects'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.settings),
+                      label: Text('Settings'),
+                    ),
+                  ],
+                ),
+                // Tab content area
+                Expanded(
+                  child: IndexedStack(
+                    index: activeTab,
+                    children: const [
+                      _TimerTab(),
+                      _SubjectsTab(),
+                      _SettingsTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Timer Tab - Study session with subject selection
+class _TimerTab extends ConsumerStatefulWidget {
+  const _TimerTab();
+
+  @override
+  ConsumerState<_TimerTab> createState() => _TimerTabState();
+}
+
+class _TimerTabState extends ConsumerState<_TimerTab> {
+  @override
+  Widget build(BuildContext context) {
     final subjects = ref.watch(subjectProvider);
     final selectedSubjectId = ref.watch(selectedSubjectIdProvider);
     final isValidSubject =
         selectedSubjectId == null ||
         subjects.any((s) => s.id == selectedSubjectId);
     final safeSelectedId = isValidSubject ? selectedSubjectId : null;
+    final selectedSubject = safeSelectedId == null
+        ? null
+        : subjects.firstWhere((s) => s.id == safeSelectedId);
 
     if (!isValidSubject) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -411,13 +493,95 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
                           ? null
                           : (value) => selectedSubjectNotifier.state = value,
                     ),
-                  if (safeSelectedId != null)
-                    Text(
-                      'Selected: ${subjects.firstWhere((s) => s.id == safeSelectedId).name}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.green,
+                  if (selectedSubject != null)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.grey.withValues(alpha: 0.05),
+                        border: Border.all(
+                          color: Colors.grey.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: 8,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  selectedSubject.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${selectedSubject.studyTimeToday}/${selectedSubject.effectiveTargetMinutes} min',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  if (selectedSubject.carryOverMinutes != 0)
+                                    Text(
+                                      selectedSubject.carryOverMinutes < 0
+                                          ? '${selectedSubject.carryOverMinutes}m debt from yesterday'
+                                          : '+${selectedSubject.carryOverMinutes}m surplus',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            selectedSubject.carryOverMinutes < 0
+                                            ? Colors.red
+                                            : Colors.green,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          LinearProgressIndicator(
+                            value: selectedSubject
+                                .getProgressPercentage()
+                                .clamp(0.0, 1.0),
+                            backgroundColor: Colors.grey[300],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              selectedSubject.getRemainingMinutes() <= 0
+                                  ? Colors.green
+                                  : Colors.deepPurple,
+                            ),
+                            minHeight: 6,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          Text(
+                            selectedSubject.getRemainingMinutes() > 0
+                                ? '${selectedSubject.getRemainingMinutes()} minutes remaining to reach daily target'
+                                : '✅ Daily target reached!',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight:
+                                  selectedSubject.getRemainingMinutes() > 0
+                                  ? FontWeight.normal
+                                  : FontWeight.w600,
+                              color: selectedSubject.getRemainingMinutes() > 0
+                                  ? Colors.grey[700]
+                                  : Colors.green,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                 ],

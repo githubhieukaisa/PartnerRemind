@@ -153,7 +153,6 @@ class WindowManagementService {
       // Position at top center of screen
       await windowManager.setSize(const Size(800, compactHeight));
       await windowManager.setPosition(Offset((screenSize.width - 800) / 2, 0));
-      await windowManager.setAlwaysOnTop(true);
 
       print('📊 Compact study mode activated');
     } catch (e) {

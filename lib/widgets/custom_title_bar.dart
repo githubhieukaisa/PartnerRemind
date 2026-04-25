@@ -166,11 +166,22 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
               ],
             )
           else
-            // Compact mode: only show exit button
-            _TitleBarButton(
-              icon: Icons.fullscreen,
-              tooltip: 'Exit Study Mode',
-              onPressed: widget.onCompactToggle,
+            // Compact mode: show minimize and exit buttons
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _TitleBarButton(
+                  icon: Icons.minimize,
+                  tooltip: 'Minimize',
+                  onPressed: widget.onMinimize,
+                ),
+                const SizedBox(width: 8),
+                _TitleBarButton(
+                  icon: Icons.fullscreen,
+                  tooltip: 'Exit Study Mode',
+                  onPressed: widget.onCompactToggle,
+                ),
+              ],
             ),
         ],
       ),
