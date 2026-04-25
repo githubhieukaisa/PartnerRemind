@@ -14,7 +14,11 @@ class BreakBankNotifier extends Notifier<BreakBank> {
   DateTime? _lastPersistTime;
 
   // Accumulation tracking
-  Duration _accumulatedBreakTime = Duration.zero;
+  // Tracks the high-water mark of break time earned in the CURRENT running timer session.
+  Duration _sessionAccumulatedBreakTime = Duration.zero;
+
+  // Tracks break time added to UI but not yet saved to Isar.
+  Duration _unpersistedBreakTime = Duration.zero;
   Timer? _batchPersistTimer;
   static const Duration _batchPersistInterval = Duration(minutes: 2);
 
@@ -50,8 +54,20 @@ class BreakBankNotifier extends Notifier<BreakBank> {
 
       final ratio = ref.read(studyRatioProvider);
 
+      // If timer is completely reset/stopped, reset the session tracker.
+      if (!next.isRunning && next.elapsed == Duration.zero) {
+        _sessionAccumulatedBreakTime = Duration.zero;
+      }
+
       // Only accumulate when timer is running
       if (next.isRunning) {
+        // If starting a fresh session, ensure tracker is 0.
+        if (previous != null &&
+            !previous.isRunning &&
+            next.elapsed == Duration.zero) {
+          _sessionAccumulatedBreakTime = Duration.zero;
+        }
+
         // Calculate accumulated break time based on actual study duration (not display time)
         final actualStudyDuration = next.getActualStudyTime();
         final calculatedBreakTime = ratio.calculateBreakTimeAccumulated(
@@ -59,12 +75,15 @@ class BreakBankNotifier extends Notifier<BreakBank> {
         );
 
         // Add the difference to our accumulation (avoid double-counting)
-        if (calculatedBreakTime > _accumulatedBreakTime) {
-          final newBreakTime = calculatedBreakTime - _accumulatedBreakTime;
-          _accumulatedBreakTime = calculatedBreakTime;
+        if (calculatedBreakTime > _sessionAccumulatedBreakTime) {
+          final delta = calculatedBreakTime - _sessionAccumulatedBreakTime;
+          _sessionAccumulatedBreakTime = calculatedBreakTime;
 
           // Update state in-memory (UI sees immediate update)
-          state = state.addBreakTime(newBreakTime);
+          state = state.addBreakTime(delta);
+
+          // Queue for database batch persistence.
+          _unpersistedBreakTime += delta;
         }
       }
 
@@ -86,12 +105,12 @@ class BreakBankNotifier extends Notifier<BreakBank> {
   /// Persist accumulated break time to Isar database
   Future<void> _persistAccumulatedBreakTime() async {
     try {
-      if (_accumulatedBreakTime > Duration.zero) {
+      if (_unpersistedBreakTime > Duration.zero) {
         // Add to database
-        await _isarService.addBreakTime(_accumulatedBreakTime.inSeconds);
+        await _isarService.addBreakTime(_unpersistedBreakTime.inSeconds);
 
-        // Reset accumulation counter
-        _accumulatedBreakTime = Duration.zero;
+        // Only reset persistence queue; keep session high-water mark intact.
+        _unpersistedBreakTime = Duration.zero;
         _lastPersistTime = DateTime.now();
 
         print('✅ Break bank batch persisted to Isar');
@@ -151,8 +170,9 @@ class BreakBankNotifier extends Notifier<BreakBank> {
       // Update in-memory state
       state = BreakBank(lastUpdated: DateTime.now());
 
-      // Reset accumulation counter
-      _accumulatedBreakTime = Duration.zero;
+      // Reset accumulation trackers
+      _sessionAccumulatedBreakTime = Duration.zero;
+      _unpersistedBreakTime = Duration.zero;
 
       // Persist immediately to Isar
       await _isarService.resetBreakBank();

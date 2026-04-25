@@ -324,6 +324,17 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
 
     final subjects = ref.watch(subjectProvider);
     final selectedSubjectId = ref.watch(selectedSubjectIdProvider);
+    final isValidSubject =
+        selectedSubjectId == null ||
+        subjects.any((s) => s.id == selectedSubjectId);
+    final safeSelectedId = isValidSubject ? selectedSubjectId : null;
+
+    if (!isValidSubject) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(selectedSubjectIdProvider.notifier).state = null;
+      });
+    }
+
     final selectedSubjectNotifier = ref.read(
       selectedSubjectIdProvider.notifier,
     );
@@ -377,7 +388,7 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
                   else
                     DropdownButton<int?>(
                       isExpanded: true,
-                      value: selectedSubjectId,
+                      value: safeSelectedId,
                       hint: const Text('Choose a subject...'),
                       items: [
                         const DropdownMenuItem<int?>(
@@ -400,9 +411,9 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
                           ? null
                           : (value) => selectedSubjectNotifier.state = value,
                     ),
-                  if (selectedSubjectId != null)
+                  if (safeSelectedId != null)
                     Text(
-                      'Selected: ${subjects.firstWhere((s) => s.id == selectedSubjectId).name}',
+                      'Selected: ${subjects.firstWhere((s) => s.id == safeSelectedId).name}',
                       style: const TextStyle(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
