@@ -48,7 +48,7 @@ class BreakBankDisplay extends ConsumerWidget {
           LinearProgressIndicator(
             value:
                 breakBank.totalBreakTime.inSeconds /
-                3600, // Normalize to 1 hour
+                86400, // Normalize to 1 day
             backgroundColor: Colors.grey[300],
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
             minHeight: 8,
