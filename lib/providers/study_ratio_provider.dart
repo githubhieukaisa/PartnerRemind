@@ -20,6 +20,11 @@ class StudyRatioNotifier extends StateNotifier<StudyRatioConfig> {
     state = StudyRatioConfig.ratio4to1();
   }
 
+  /// Change study ratio to 12:1
+  void setRatio12to1() {
+    state = StudyRatioConfig.ratio12to1();
+  }
+
   /// Set custom ratio
   void setCustomRatio({required int studyMinutes, required int breakMinutes}) {
     if (studyMinutes > 0 && breakMinutes > 0) {

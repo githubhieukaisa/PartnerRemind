@@ -30,6 +30,11 @@ class StudyRatioConfig extends Equatable {
     return const StudyRatioConfig(studyMinutes: 4, breakMinutes: 1);
   }
 
+  /// Create 12:1 ratio
+  factory StudyRatioConfig.ratio12to1() {
+    return const StudyRatioConfig(studyMinutes: 12, breakMinutes: 1);
+  }
+
   /// Calculate break time accumulated based on study duration
   /// Uses proportional/linear accumulation for smooth real-time updates
   /// Formula: breakSeconds = studySeconds * (breakMinutes / studyMinutes)

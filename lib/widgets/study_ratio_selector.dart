@@ -76,6 +76,11 @@ class StudyRatioSelector extends ConsumerWidget {
             runSpacing: 8,
             children: [
               _RatioButton(
+                label: '12:1',
+                isSelected: ratio.studyMinutes == 12 && ratio.breakMinutes == 1,
+                onPressed: () => ratioNotifier.setRatio12to1(),
+              ),
+              _RatioButton(
                 label: '6:1',
                 isSelected: ratio.studyMinutes == 6 && ratio.breakMinutes == 1,
                 onPressed: () => ratioNotifier.setRatio6to1(),
