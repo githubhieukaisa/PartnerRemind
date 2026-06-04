@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../utils/time_utils.dart';
 import '../models/subject.dart';
 import '../providers/subject_provider.dart';
 import 'edit_subject_dialog.dart';
@@ -122,7 +123,7 @@ class _SubjectCard extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '${subject.studyTimeTodaySeconds ~/ 60}/${subject.effectiveTargetSeconds ~/ 60} min',
+                          '${TimeUtils.formatSeconds(subject.studyTimeTodaySeconds)} / ${TimeUtils.formatSeconds(subject.effectiveTargetSeconds)}',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -134,8 +135,8 @@ class _SubjectCard extends ConsumerWidget {
                             padding: const EdgeInsets.only(top: 2),
                             child: Text(
                               subject.carryOverSeconds < 0
-                                  ? '${(subject.carryOverSeconds.abs() ~/ 60)}m debt from yesterday'
-                                  : '+${(subject.carryOverSeconds ~/ 60)}m surplus',
+                                  ? '${TimeUtils.formatSecondsToText(subject.carryOverSeconds.abs())} debt from yesterday'
+                                  : '+${TimeUtils.formatSecondsToText(subject.carryOverSeconds)} surplus',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -220,7 +221,7 @@ class _SubjectCard extends ConsumerWidget {
             // Status
             if (remainingSeconds > 0)
               Text(
-                '${remainingSeconds ~/ 60} minutes remaining',
+                '${TimeUtils.formatSeconds(remainingSeconds)} remaining',
                 style: TextStyle(fontSize: 11, color: Colors.grey[600]),
               )
             else

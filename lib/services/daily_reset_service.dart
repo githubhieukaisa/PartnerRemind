@@ -42,7 +42,8 @@ class DailyResetService extends Notifier<void> {
       final subjects = await isarService.getAllSubjects();
       final breakBankSnapshot = await isarService.getBreakBankSnapshot();
 
-      final hasCarryOverStudyData = subjects.any((s) => s.studyTimeTodaySeconds > 0);
+      final hasCarryOverStudyData = subjects.any((s) => 
+          s.studyTimeTodaySeconds > 0 && s.lastUpdated.isBefore(startOfToday));
       final breakBankSnapshotIsStale = breakBankSnapshot.lastUpdated.isBefore(
         startOfToday,
       );

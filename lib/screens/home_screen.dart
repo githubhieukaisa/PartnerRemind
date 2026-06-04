@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../utils/time_utils.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/timer_state.dart';
 import '../providers/window_state_provider.dart';
@@ -237,9 +238,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeTabNotifier = ref.read(activeTabProvider.notifier);
     final timerState = ref.watch(precisionTimerProvider);
     final subjects = ref.watch(subjectProvider);
-    final totalStudyMinutes = subjects.fold<int>(
+    final totalStudySeconds = subjects.fold<int>(
       0,
-      (sum, subject) => sum + (subject.studyTimeTodaySeconds ~/ 60),
+      (sum, subject) => sum + subject.studyTimeTodaySeconds,
     );
 
     String formatMiniTimer(Duration d) {
@@ -319,7 +320,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${totalStudyMinutes}m',
+                            TimeUtils.formatSecondsToText(totalStudySeconds),
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -528,7 +529,7 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    '${selectedSubject.studyTimeTodaySeconds ~/ 60}/${selectedSubject.effectiveTargetSeconds ~/ 60} min',
+                                    '${TimeUtils.formatSeconds(selectedSubject.studyTimeTodaySeconds)} / ${TimeUtils.formatSeconds(selectedSubject.effectiveTargetSeconds)}',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -538,8 +539,8 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
                                   if (selectedSubject.carryOverSeconds != 0)
                                     Text(
                                       selectedSubject.carryOverSeconds < 0
-                                          ? '${(selectedSubject.carryOverSeconds.abs() ~/ 60)}m debt from yesterday'
-                                          : '+${(selectedSubject.carryOverSeconds ~/ 60)}m surplus',
+                                          ? '${TimeUtils.formatSecondsToText(selectedSubject.carryOverSeconds.abs())} debt from yesterday'
+                                          : '+${TimeUtils.formatSecondsToText(selectedSubject.carryOverSeconds)} surplus',
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
@@ -568,7 +569,7 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
                           ),
                           Text(
                             selectedSubject.getRemainingSeconds() > 0
-                                ? '${selectedSubject.getRemainingSeconds() ~/ 60} minutes remaining to reach daily target'
+                                ? '${TimeUtils.formatSeconds(selectedSubject.getRemainingSeconds())} remaining to reach daily target'
                                 : '✅ Daily target reached!',
                             style: TextStyle(
                               fontSize: 11,

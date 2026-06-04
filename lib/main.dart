@@ -58,6 +58,9 @@ class _MyAppState extends ConsumerState<MyApp> with WindowListener {
   void onWindowClose() async {
     print('🚪 Window close event detected. Performing auto-save...');
     
+    // Hide the window immediately so the user feels it closed instantly
+    await windowManager.hide();
+    
     try {
       // Access the timer notifier to stop and save the current session.
       // This internally calls saveStudySession which saves to Isar.
