@@ -17,9 +17,9 @@ const SubjectSchema = CollectionSchema(
   name: r'Subject',
   id: 7648000959054204885,
   properties: {
-    r'carryOverMinutes': PropertySchema(
+    r'carryOverSeconds': PropertySchema(
       id: 0,
-      name: r'carryOverMinutes',
+      name: r'carryOverSeconds',
       type: IsarType.long,
     ),
     r'createdAt': PropertySchema(
@@ -32,9 +32,9 @@ const SubjectSchema = CollectionSchema(
       name: r'dailyTargetMinutes',
       type: IsarType.long,
     ),
-    r'effectiveTargetMinutes': PropertySchema(
+    r'effectiveTargetSeconds': PropertySchema(
       id: 3,
-      name: r'effectiveTargetMinutes',
+      name: r'effectiveTargetSeconds',
       type: IsarType.long,
     ),
     r'isActive': PropertySchema(
@@ -57,9 +57,14 @@ const SubjectSchema = CollectionSchema(
       name: r'notes',
       type: IsarType.string,
     ),
-    r'studyTimeToday': PropertySchema(
+    r'studyRatio': PropertySchema(
       id: 8,
-      name: r'studyTimeToday',
+      name: r'studyRatio',
+      type: IsarType.long,
+    ),
+    r'studyTimeTodaySeconds': PropertySchema(
+      id: 9,
+      name: r'studyTimeTodaySeconds',
       type: IsarType.long,
     )
   },
@@ -99,15 +104,16 @@ void _subjectSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.carryOverMinutes);
+  writer.writeLong(offsets[0], object.carryOverSeconds);
   writer.writeDateTime(offsets[1], object.createdAt);
   writer.writeLong(offsets[2], object.dailyTargetMinutes);
-  writer.writeLong(offsets[3], object.effectiveTargetMinutes);
+  writer.writeLong(offsets[3], object.effectiveTargetSeconds);
   writer.writeBool(offsets[4], object.isActive);
   writer.writeDateTime(offsets[5], object.lastUpdated);
   writer.writeString(offsets[6], object.name);
   writer.writeString(offsets[7], object.notes);
-  writer.writeLong(offsets[8], object.studyTimeToday);
+  writer.writeLong(offsets[8], object.studyRatio);
+  writer.writeLong(offsets[9], object.studyTimeTodaySeconds);
 }
 
 Subject _subjectDeserialize(
@@ -117,11 +123,12 @@ Subject _subjectDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Subject(
-    carryOverMinutes: reader.readLongOrNull(offsets[0]) ?? 0,
+    carryOverSeconds: reader.readLongOrNull(offsets[0]) ?? 0,
     dailyTargetMinutes: reader.readLong(offsets[2]),
     isActive: reader.readBoolOrNull(offsets[4]) ?? true,
     name: reader.readString(offsets[6]),
-    studyTimeToday: reader.readLongOrNull(offsets[8]) ?? 0,
+    studyRatio: reader.readLongOrNull(offsets[8]),
+    studyTimeTodaySeconds: reader.readLongOrNull(offsets[9]) ?? 0,
   );
   object.createdAt = reader.readDateTime(offsets[1]);
   object.id = id;
@@ -154,6 +161,8 @@ P _subjectDeserializeProp<P>(
     case 7:
       return (reader.readStringOrNull(offset)) as P;
     case 8:
+      return (reader.readLongOrNull(offset)) as P;
+    case 9:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -249,45 +258,45 @@ extension SubjectQueryWhere on QueryBuilder<Subject, Subject, QWhereClause> {
 
 extension SubjectQueryFilter
     on QueryBuilder<Subject, Subject, QFilterCondition> {
-  QueryBuilder<Subject, Subject, QAfterFilterCondition> carryOverMinutesEqualTo(
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> carryOverSecondsEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'carryOverMinutes',
+        property: r'carryOverSeconds',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Subject, Subject, QAfterFilterCondition>
-      carryOverMinutesGreaterThan(
+      carryOverSecondsGreaterThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'carryOverMinutes',
+        property: r'carryOverSeconds',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Subject, Subject, QAfterFilterCondition>
-      carryOverMinutesLessThan(
+      carryOverSecondsLessThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'carryOverMinutes',
+        property: r'carryOverSeconds',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterFilterCondition> carryOverMinutesBetween(
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> carryOverSecondsBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -295,7 +304,7 @@ extension SubjectQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'carryOverMinutes',
+        property: r'carryOverSeconds',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -414,45 +423,45 @@ extension SubjectQueryFilter
   }
 
   QueryBuilder<Subject, Subject, QAfterFilterCondition>
-      effectiveTargetMinutesEqualTo(int value) {
+      effectiveTargetSecondsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'effectiveTargetMinutes',
+        property: r'effectiveTargetSeconds',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Subject, Subject, QAfterFilterCondition>
-      effectiveTargetMinutesGreaterThan(
+      effectiveTargetSecondsGreaterThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'effectiveTargetMinutes',
+        property: r'effectiveTargetSeconds',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Subject, Subject, QAfterFilterCondition>
-      effectiveTargetMinutesLessThan(
+      effectiveTargetSecondsLessThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'effectiveTargetMinutes',
+        property: r'effectiveTargetSeconds',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Subject, Subject, QAfterFilterCondition>
-      effectiveTargetMinutesBetween(
+      effectiveTargetSecondsBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -460,7 +469,7 @@ extension SubjectQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'effectiveTargetMinutes',
+        property: r'effectiveTargetSeconds',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -860,44 +869,115 @@ extension SubjectQueryFilter
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterFilterCondition> studyTimeTodayEqualTo(
-      int value) {
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> studyRatioIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'studyRatio',
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> studyRatioIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'studyRatio',
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> studyRatioEqualTo(
+      int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'studyTimeToday',
+        property: r'studyRatio',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> studyRatioGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'studyRatio',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> studyRatioLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'studyRatio',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition> studyRatioBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'studyRatio',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterFilterCondition>
+      studyTimeTodaySecondsEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'studyTimeTodaySeconds',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Subject, Subject, QAfterFilterCondition>
-      studyTimeTodayGreaterThan(
+      studyTimeTodaySecondsGreaterThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'studyTimeToday',
+        property: r'studyTimeTodaySeconds',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterFilterCondition> studyTimeTodayLessThan(
+  QueryBuilder<Subject, Subject, QAfterFilterCondition>
+      studyTimeTodaySecondsLessThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'studyTimeToday',
+        property: r'studyTimeTodaySeconds',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterFilterCondition> studyTimeTodayBetween(
+  QueryBuilder<Subject, Subject, QAfterFilterCondition>
+      studyTimeTodaySecondsBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -905,7 +985,7 @@ extension SubjectQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'studyTimeToday',
+        property: r'studyTimeTodaySeconds',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -922,15 +1002,15 @@ extension SubjectQueryLinks
     on QueryBuilder<Subject, Subject, QFilterCondition> {}
 
 extension SubjectQuerySortBy on QueryBuilder<Subject, Subject, QSortBy> {
-  QueryBuilder<Subject, Subject, QAfterSortBy> sortByCarryOverMinutes() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> sortByCarryOverSeconds() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'carryOverMinutes', Sort.asc);
+      return query.addSortBy(r'carryOverSeconds', Sort.asc);
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterSortBy> sortByCarryOverMinutesDesc() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> sortByCarryOverSecondsDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'carryOverMinutes', Sort.desc);
+      return query.addSortBy(r'carryOverSeconds', Sort.desc);
     });
   }
 
@@ -958,16 +1038,16 @@ extension SubjectQuerySortBy on QueryBuilder<Subject, Subject, QSortBy> {
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterSortBy> sortByEffectiveTargetMinutes() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> sortByEffectiveTargetSeconds() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'effectiveTargetMinutes', Sort.asc);
+      return query.addSortBy(r'effectiveTargetSeconds', Sort.asc);
     });
   }
 
   QueryBuilder<Subject, Subject, QAfterSortBy>
-      sortByEffectiveTargetMinutesDesc() {
+      sortByEffectiveTargetSecondsDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'effectiveTargetMinutes', Sort.desc);
+      return query.addSortBy(r'effectiveTargetSeconds', Sort.desc);
     });
   }
 
@@ -1019,30 +1099,43 @@ extension SubjectQuerySortBy on QueryBuilder<Subject, Subject, QSortBy> {
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterSortBy> sortByStudyTimeToday() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> sortByStudyRatio() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'studyTimeToday', Sort.asc);
+      return query.addSortBy(r'studyRatio', Sort.asc);
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterSortBy> sortByStudyTimeTodayDesc() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> sortByStudyRatioDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'studyTimeToday', Sort.desc);
+      return query.addSortBy(r'studyRatio', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy> sortByStudyTimeTodaySeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'studyTimeTodaySeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy>
+      sortByStudyTimeTodaySecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'studyTimeTodaySeconds', Sort.desc);
     });
   }
 }
 
 extension SubjectQuerySortThenBy
     on QueryBuilder<Subject, Subject, QSortThenBy> {
-  QueryBuilder<Subject, Subject, QAfterSortBy> thenByCarryOverMinutes() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> thenByCarryOverSeconds() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'carryOverMinutes', Sort.asc);
+      return query.addSortBy(r'carryOverSeconds', Sort.asc);
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterSortBy> thenByCarryOverMinutesDesc() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> thenByCarryOverSecondsDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'carryOverMinutes', Sort.desc);
+      return query.addSortBy(r'carryOverSeconds', Sort.desc);
     });
   }
 
@@ -1070,16 +1163,16 @@ extension SubjectQuerySortThenBy
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterSortBy> thenByEffectiveTargetMinutes() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> thenByEffectiveTargetSeconds() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'effectiveTargetMinutes', Sort.asc);
+      return query.addSortBy(r'effectiveTargetSeconds', Sort.asc);
     });
   }
 
   QueryBuilder<Subject, Subject, QAfterSortBy>
-      thenByEffectiveTargetMinutesDesc() {
+      thenByEffectiveTargetSecondsDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'effectiveTargetMinutes', Sort.desc);
+      return query.addSortBy(r'effectiveTargetSeconds', Sort.desc);
     });
   }
 
@@ -1143,24 +1236,37 @@ extension SubjectQuerySortThenBy
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterSortBy> thenByStudyTimeToday() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> thenByStudyRatio() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'studyTimeToday', Sort.asc);
+      return query.addSortBy(r'studyRatio', Sort.asc);
     });
   }
 
-  QueryBuilder<Subject, Subject, QAfterSortBy> thenByStudyTimeTodayDesc() {
+  QueryBuilder<Subject, Subject, QAfterSortBy> thenByStudyRatioDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'studyTimeToday', Sort.desc);
+      return query.addSortBy(r'studyRatio', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy> thenByStudyTimeTodaySeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'studyTimeTodaySeconds', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QAfterSortBy>
+      thenByStudyTimeTodaySecondsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'studyTimeTodaySeconds', Sort.desc);
     });
   }
 }
 
 extension SubjectQueryWhereDistinct
     on QueryBuilder<Subject, Subject, QDistinct> {
-  QueryBuilder<Subject, Subject, QDistinct> distinctByCarryOverMinutes() {
+  QueryBuilder<Subject, Subject, QDistinct> distinctByCarryOverSeconds() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'carryOverMinutes');
+      return query.addDistinctBy(r'carryOverSeconds');
     });
   }
 
@@ -1176,9 +1282,9 @@ extension SubjectQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Subject, Subject, QDistinct> distinctByEffectiveTargetMinutes() {
+  QueryBuilder<Subject, Subject, QDistinct> distinctByEffectiveTargetSeconds() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'effectiveTargetMinutes');
+      return query.addDistinctBy(r'effectiveTargetSeconds');
     });
   }
 
@@ -1208,9 +1314,15 @@ extension SubjectQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Subject, Subject, QDistinct> distinctByStudyTimeToday() {
+  QueryBuilder<Subject, Subject, QDistinct> distinctByStudyRatio() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'studyTimeToday');
+      return query.addDistinctBy(r'studyRatio');
+    });
+  }
+
+  QueryBuilder<Subject, Subject, QDistinct> distinctByStudyTimeTodaySeconds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'studyTimeTodaySeconds');
     });
   }
 }
@@ -1223,9 +1335,9 @@ extension SubjectQueryProperty
     });
   }
 
-  QueryBuilder<Subject, int, QQueryOperations> carryOverMinutesProperty() {
+  QueryBuilder<Subject, int, QQueryOperations> carryOverSecondsProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'carryOverMinutes');
+      return query.addPropertyName(r'carryOverSeconds');
     });
   }
 
@@ -1242,9 +1354,9 @@ extension SubjectQueryProperty
   }
 
   QueryBuilder<Subject, int, QQueryOperations>
-      effectiveTargetMinutesProperty() {
+      effectiveTargetSecondsProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'effectiveTargetMinutes');
+      return query.addPropertyName(r'effectiveTargetSeconds');
     });
   }
 
@@ -1272,9 +1384,15 @@ extension SubjectQueryProperty
     });
   }
 
-  QueryBuilder<Subject, int, QQueryOperations> studyTimeTodayProperty() {
+  QueryBuilder<Subject, int?, QQueryOperations> studyRatioProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'studyTimeToday');
+      return query.addPropertyName(r'studyRatio');
+    });
+  }
+
+  QueryBuilder<Subject, int, QQueryOperations> studyTimeTodaySecondsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'studyTimeTodaySeconds');
     });
   }
 }

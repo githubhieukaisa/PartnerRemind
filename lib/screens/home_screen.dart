@@ -239,7 +239,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final subjects = ref.watch(subjectProvider);
     final totalStudyMinutes = subjects.fold<int>(
       0,
-      (sum, subject) => sum + subject.studyTimeToday,
+      (sum, subject) => sum + (subject.studyTimeTodaySeconds ~/ 60),
     );
 
     String formatMiniTimer(Duration d) {
@@ -528,23 +528,23 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    '${selectedSubject.studyTimeToday}/${selectedSubject.effectiveTargetMinutes} min',
+                                    '${selectedSubject.studyTimeTodaySeconds ~/ 60}/${selectedSubject.effectiveTargetSeconds ~/ 60} min',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.grey[700],
                                     ),
                                   ),
-                                  if (selectedSubject.carryOverMinutes != 0)
+                                  if (selectedSubject.carryOverSeconds != 0)
                                     Text(
-                                      selectedSubject.carryOverMinutes < 0
-                                          ? '${selectedSubject.carryOverMinutes}m debt from yesterday'
-                                          : '+${selectedSubject.carryOverMinutes}m surplus',
+                                      selectedSubject.carryOverSeconds < 0
+                                          ? '${(selectedSubject.carryOverSeconds.abs() ~/ 60)}m debt from yesterday'
+                                          : '+${(selectedSubject.carryOverSeconds ~/ 60)}m surplus',
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                         color:
-                                            selectedSubject.carryOverMinutes < 0
+                                            selectedSubject.carryOverSeconds < 0
                                             ? Colors.red
                                             : Colors.green,
                                       ),
@@ -559,7 +559,7 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
                                 .clamp(0.0, 1.0),
                             backgroundColor: Colors.grey[300],
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              selectedSubject.getRemainingMinutes() <= 0
+                              selectedSubject.getRemainingSeconds() <= 0
                                   ? Colors.green
                                   : Colors.deepPurple,
                             ),
@@ -567,16 +567,16 @@ class _TimerTabState extends ConsumerState<_TimerTab> {
                             borderRadius: BorderRadius.circular(3),
                           ),
                           Text(
-                            selectedSubject.getRemainingMinutes() > 0
-                                ? '${selectedSubject.getRemainingMinutes()} minutes remaining to reach daily target'
+                            selectedSubject.getRemainingSeconds() > 0
+                                ? '${selectedSubject.getRemainingSeconds() ~/ 60} minutes remaining to reach daily target'
                                 : '✅ Daily target reached!',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight:
-                                  selectedSubject.getRemainingMinutes() > 0
+                                  selectedSubject.getRemainingSeconds() > 0
                                   ? FontWeight.normal
                                   : FontWeight.w600,
-                              color: selectedSubject.getRemainingMinutes() > 0
+                              color: selectedSubject.getRemainingSeconds() > 0
                                   ? Colors.grey[700]
                                   : Colors.green,
                             ),

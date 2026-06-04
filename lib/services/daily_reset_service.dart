@@ -42,7 +42,7 @@ class DailyResetService extends Notifier<void> {
       final subjects = await isarService.getAllSubjects();
       final breakBankSnapshot = await isarService.getBreakBankSnapshot();
 
-      final hasCarryOverStudyData = subjects.any((s) => s.studyTimeToday > 0);
+      final hasCarryOverStudyData = subjects.any((s) => s.studyTimeTodaySeconds > 0);
       final breakBankSnapshotIsStale = breakBankSnapshot.lastUpdated.isBefore(
         startOfToday,
       );
@@ -90,7 +90,7 @@ class DailyResetService extends Notifier<void> {
       // Get all subjects before reset
       final subjects = await isarService.getAllSubjects();
       final subjectDataBefore = subjects
-          .map((s) => '${s.name}: ${s.studyTimeToday}m')
+          .map((s) => '${s.name}: ${s.studyTimeTodaySeconds ~/ 60}m')
           .toList();
 
       // Check if there's already a reset for today
@@ -169,7 +169,7 @@ class DailyResetService extends Notifier<void> {
 
       final subjects = await isarService.getAllSubjects();
       final subjectDataBefore = subjects
-          .map((s) => '${s.name}: ${s.studyTimeToday}m')
+          .map((s) => '${s.name}: ${s.studyTimeTodaySeconds ~/ 60}m')
           .toList();
 
       breakBankSnapshot.dailyResetPreference = action;

@@ -5,6 +5,9 @@ import '../models/timer_state.dart';
 import '../persistence/isar_service.dart';
 import 'precision_timer_provider.dart';
 import 'study_ratio_provider.dart';
+import 'navigation_provider.dart';
+import 'subject_provider.dart';
+import '../models/study_ratio_config.dart';
 
 /// Controller for Break Bank state management with Isar persistence
 /// Supports auto-accumulation of break time based on study duration
@@ -52,7 +55,22 @@ class BreakBankNotifier extends Notifier<BreakBank> {
         return;
       }
 
-      final ratio = ref.read(studyRatioProvider);
+      final globalRatio = ref.read(studyRatioProvider);
+      final selectedSubjectId = ref.read(selectedSubjectIdProvider);
+      final subjects = ref.read(subjectProvider);
+
+      StudyRatioConfig ratio = globalRatio;
+      if (selectedSubjectId != null) {
+        try {
+          final subject = subjects.firstWhere((s) => s.id == selectedSubjectId);
+          if (subject.studyRatio != null) {
+            ratio = StudyRatioConfig(
+              studyMinutes: subject.studyRatio!,
+              breakMinutes: 1,
+            );
+          }
+        } catch (_) {}
+      }
 
       // If timer is completely reset/stopped, reset the session tracker.
       if (!next.isRunning && next.elapsed == Duration.zero) {

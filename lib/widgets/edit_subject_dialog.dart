@@ -16,7 +16,8 @@ class EditSubjectDialog extends ConsumerStatefulWidget {
 class _EditSubjectDialogState extends ConsumerState<EditSubjectDialog> {
   late TextEditingController _subjectNameController;
   late TextEditingController _dailyTargetController;
-  TextEditingController? _debtMinutesController;
+  TextEditingController? _debtSecondsController;
+  int? _selectedStudyRatio;
 
   @override
   void initState() {
@@ -25,9 +26,10 @@ class _EditSubjectDialogState extends ConsumerState<EditSubjectDialog> {
     _dailyTargetController = TextEditingController(
       text: widget.subject.dailyTargetMinutes.toString(),
     );
-    if (widget.subject.carryOverMinutes < 0) {
-      _debtMinutesController = TextEditingController(
-        text: widget.subject.carryOverMinutes.abs().toString(),
+    _selectedStudyRatio = widget.subject.studyRatio;
+    if (widget.subject.carryOverSeconds < 0) {
+      _debtSecondsController = TextEditingController(
+        text: (widget.subject.carryOverSeconds.abs() ~/ 60).toString(),
       );
     }
   }
@@ -36,14 +38,14 @@ class _EditSubjectDialogState extends ConsumerState<EditSubjectDialog> {
   void dispose() {
     _subjectNameController.dispose();
     _dailyTargetController.dispose();
-    _debtMinutesController?.dispose();
+    _debtSecondsController?.dispose();
     super.dispose();
   }
 
   Future<void> _handleUpdateSubject() async {
     final name = _subjectNameController.text.trim();
     final targetMinutesText = _dailyTargetController.text.trim();
-    final debtMinutesText = _debtMinutesController?.text.trim();
+    final debtMinutesText = _debtSecondsController?.text.trim();
 
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -60,29 +62,31 @@ class _EditSubjectDialogState extends ConsumerState<EditSubjectDialog> {
       return;
     }
 
-    int carryOverMinutes = widget.subject.carryOverMinutes;
-    if (widget.subject.carryOverMinutes < 0) {
-      final parsedDebt = int.tryParse(debtMinutesText ?? '');
-      if (parsedDebt == null) {
+    int carryOverSeconds = widget.subject.carryOverSeconds;
+    if (widget.subject.carryOverSeconds < 0) {
+      final parsedDebtMinutes = int.tryParse(debtMinutesText ?? '');
+      if (parsedDebtMinutes == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Debt minutes must be a valid integer')),
         );
         return;
       }
 
-      if (parsedDebt < 0 ||
-          parsedDebt > widget.subject.carryOverMinutes.abs()) {
+      final parsedDebtSeconds = parsedDebtMinutes * 60;
+
+      if (parsedDebtSeconds < 0 ||
+          parsedDebtSeconds > widget.subject.carryOverSeconds.abs()) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Debt must be between 0 and ${widget.subject.carryOverMinutes.abs()}',
+              'Debt must be between 0 and ${widget.subject.carryOverSeconds.abs() ~/ 60}',
             ),
           ),
         );
         return;
       }
 
-      carryOverMinutes = -parsedDebt;
+      carryOverSeconds = -parsedDebtSeconds;
     }
 
     try {
@@ -90,8 +94,9 @@ class _EditSubjectDialogState extends ConsumerState<EditSubjectDialog> {
           Subject(
               name: name,
               dailyTargetMinutes: targetMinutes,
-              studyTimeToday: widget.subject.studyTimeToday,
-              carryOverMinutes: carryOverMinutes,
+              studyTimeTodaySeconds: widget.subject.studyTimeTodaySeconds,
+              carryOverSeconds: carryOverSeconds,
+              studyRatio: _selectedStudyRatio,
               isActive: widget.subject.isActive,
             )
             ..id = widget.subject.id
@@ -149,15 +154,51 @@ class _EditSubjectDialogState extends ConsumerState<EditSubjectDialog> {
                 suffixText: 'min',
               ),
             ),
-            if (widget.subject.carryOverMinutes < 0)
+            
+            // Custom Study Ratio
+            DropdownButtonFormField<int?>(
+              value: _selectedStudyRatio,
+              decoration: InputDecoration(
+                labelText: 'Study/Break Ratio',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                prefixIcon: const Icon(Icons.tune),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: null,
+                  child: Text('Global Default (from Settings)'),
+                ),
+                DropdownMenuItem(
+                  value: 6,
+                  child: Text('6:1 (Deep Work)'),
+                ),
+                DropdownMenuItem(
+                  value: 12,
+                  child: Text('12:1 (Light Task/Chores)'),
+                ),
+                DropdownMenuItem(
+                  value: 3,
+                  child: Text('3:1 (Intense Focus)'),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedStudyRatio = value;
+                });
+              },
+            ),
+
+            if (widget.subject.carryOverSeconds < 0)
               TextField(
-                controller: _debtMinutesController,
+                controller: _debtSecondsController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Debt Minutes',
-                  hintText: widget.subject.carryOverMinutes.abs().toString(),
+                  hintText: (widget.subject.carryOverSeconds.abs() ~/ 60).toString(),
                   helperText:
-                      'Allowed range: 0 to ${widget.subject.carryOverMinutes.abs()}',
+                      'Allowed range: 0 to ${widget.subject.carryOverSeconds.abs() ~/ 60}',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

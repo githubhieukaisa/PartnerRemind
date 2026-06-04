@@ -30,10 +30,10 @@ class SessionLogController extends Notifier<void> {
         return null;
       }
 
-      // Convert to whole minutes
-      final minutes = elapsedDuration.inSeconds ~/ 60;
-      if (minutes == 0) {
-        print('⚠️ Session too short: < 1 minute');
+      // Convert to whole seconds
+      final seconds = elapsedDuration.inSeconds;
+      if (seconds == 0) {
+        print('⚠️ Session too short: < 1 second');
         return null;
       }
 
@@ -49,11 +49,11 @@ class SessionLogController extends Notifier<void> {
 
       // Save to Isar
       final id = await _isarService.addSessionLog(sessionLog);
-      print('✅ Session saved (ID: $id) - $minutes min on subject $subjectId');
+      print('✅ Session saved (ID: $id) - $seconds sec on subject $subjectId');
 
-      // Update subject's study time
-      await ref.read(subjectProvider.notifier).addStudyTime(subjectId, minutes);
-      print('✅ Updated subject study time: +$minutes min');
+      // Update subject's study time in seconds
+      await ref.read(subjectProvider.notifier).addStudyTime(subjectId, seconds);
+      print('✅ Updated subject study time: +$seconds sec');
 
       return id;
     } catch (e) {

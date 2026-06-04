@@ -155,7 +155,7 @@ class _CountdownDialogState extends ConsumerState<_CountdownDialog> {
         : subjects.where((s) => s.id == selectedId).isEmpty
         ? null
         : subjects.firstWhere((s) => s.id == selectedId);
-    final remainingMinutes = selectedSubject?.getRemainingMinutes() ?? 0;
+    final remainingMinutes = (selectedSubject?.getRemainingSeconds() ?? 0) ~/ 60;
 
     return AlertDialog(
       title: const Text('Start Countdown'),

@@ -13,6 +13,7 @@ class AddSubjectDialog extends ConsumerStatefulWidget {
 class _AddSubjectDialogState extends ConsumerState<AddSubjectDialog> {
   late TextEditingController _subjectNameController;
   late TextEditingController _dailyTargetController;
+  int? _selectedStudyRatio;
 
   @override
   void initState() {
@@ -44,9 +45,11 @@ class _AddSubjectDialogState extends ConsumerState<AddSubjectDialog> {
     final targetMinutes = int.tryParse(targetMinutesText) ?? 120;
 
     try {
-      await ref
-          .read(subjectProvider.notifier)
-          .addSubject(name: name, dailyTargetMinutes: targetMinutes);
+      await ref.read(subjectProvider.notifier).addSubject(
+            name: name,
+            dailyTargetMinutes: targetMinutes,
+            studyRatio: _selectedStudyRatio,
+          );
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -98,6 +101,41 @@ class _AddSubjectDialogState extends ConsumerState<AddSubjectDialog> {
                 prefixIcon: const Icon(Icons.timer),
                 suffixText: 'min',
               ),
+            ),
+
+            // Custom Study Ratio
+            DropdownButtonFormField<int?>(
+              value: _selectedStudyRatio,
+              decoration: InputDecoration(
+                labelText: 'Study/Break Ratio',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                prefixIcon: const Icon(Icons.tune),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: null,
+                  child: Text('Global Default (from Settings)'),
+                ),
+                DropdownMenuItem(
+                  value: 6,
+                  child: Text('6:1 (Deep Work)'),
+                ),
+                DropdownMenuItem(
+                  value: 12,
+                  child: Text('12:1 (Light Task/Chores)'),
+                ),
+                DropdownMenuItem(
+                  value: 3,
+                  child: Text('3:1 (Intense Focus)'),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedStudyRatio = value;
+                });
+              },
             ),
           ],
         ),

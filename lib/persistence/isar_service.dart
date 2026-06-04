@@ -139,9 +139,9 @@ class IsarService {
     await _isar.writeTxn(() async {
       for (var subject in subjects) {
         final difference =
-            subject.studyTimeToday - subject.effectiveTargetMinutes;
-        subject.carryOverMinutes = difference;
-        subject.studyTimeToday = 0;
+            subject.studyTimeTodaySeconds - subject.effectiveTargetSeconds;
+        subject.carryOverSeconds = difference;
+        subject.studyTimeTodaySeconds = 0;
         subject.lastUpdated = DateTime.now();
         await _isar.subjects.put(subject);
       }

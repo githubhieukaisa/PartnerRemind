@@ -88,7 +88,7 @@ class _SubjectCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progressPercent = subject.getProgressPercentage();
-    final remainingMinutes = subject.getRemainingMinutes();
+    final remainingSeconds = subject.getRemainingSeconds();
 
     return Card(
       elevation: 2,
@@ -122,24 +122,24 @@ class _SubjectCard extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '${subject.studyTimeToday}/${subject.effectiveTargetMinutes} min',
+                          '${subject.studyTimeTodaySeconds ~/ 60}/${subject.effectiveTargetSeconds ~/ 60} min',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: Colors.grey[600],
                           ),
                         ),
-                        if (subject.carryOverMinutes != 0)
+                        if (subject.carryOverSeconds != 0)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
                             child: Text(
-                              subject.carryOverMinutes < 0
-                                  ? '${subject.carryOverMinutes}m debt from yesterday'
-                                  : '+${subject.carryOverMinutes}m surplus',
+                              subject.carryOverSeconds < 0
+                                  ? '${(subject.carryOverSeconds.abs() ~/ 60)}m debt from yesterday'
+                                  : '+${(subject.carryOverSeconds ~/ 60)}m surplus',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: subject.carryOverMinutes < 0
+                                color: subject.carryOverSeconds < 0
                                     ? Colors.red
                                     : Colors.green,
                               ),
@@ -211,16 +211,16 @@ class _SubjectCard extends ConsumerWidget {
               value: progressPercent.clamp(0.0, 1.0),
               backgroundColor: Colors.grey[300],
               valueColor: AlwaysStoppedAnimation<Color>(
-                remainingMinutes <= 0 ? Colors.green : Colors.deepPurple,
+                remainingSeconds <= 0 ? Colors.green : Colors.deepPurple,
               ),
               minHeight: 6,
               borderRadius: BorderRadius.circular(3),
             ),
 
             // Status
-            if (remainingMinutes > 0)
+            if (remainingSeconds > 0)
               Text(
-                '$remainingMinutes minutes remaining',
+                '${remainingSeconds ~/ 60} minutes remaining',
                 style: TextStyle(fontSize: 11, color: Colors.grey[600]),
               )
             else

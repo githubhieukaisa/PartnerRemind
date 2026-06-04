@@ -32,12 +32,14 @@ class SubjectNotifier extends Notifier<List<Subject>> {
   Future<void> addSubject({
     required String name,
     required int dailyTargetMinutes,
+    int? studyRatio,
   }) async {
     try {
       final newSubject = Subject(
         name: name,
         dailyTargetMinutes: dailyTargetMinutes,
-        studyTimeToday: 0,
+        studyTimeTodaySeconds: 0,
+        studyRatio: studyRatio,
       );
       await _isarService.addSubject(newSubject);
       // Reload from database to get the generated ID
@@ -85,11 +87,11 @@ class SubjectNotifier extends Notifier<List<Subject>> {
   }
 
   /// Add study time to a subject
-  Future<void> addStudyTime(int subjectId, int minutes) async {
+  Future<void> addStudyTime(int subjectId, int seconds) async {
     try {
       final subject = getSubjectById(subjectId);
       if (subject != null) {
-        subject.addStudyTime(minutes);
+        subject.addStudyTimeSeconds(seconds);
         await updateSubject(subject);
       }
     } catch (e) {
